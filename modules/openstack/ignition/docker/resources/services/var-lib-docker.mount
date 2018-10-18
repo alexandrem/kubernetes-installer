@@ -1,0 +1,10 @@
+[Unit]
+Description=Mount device to /var/lib/docker
+
+[Mount]
+What=${device_path}
+Where=/var/lib/docker
+Type=${filesystem}
+
+[Install]
+RequiredBy=local-fs.target

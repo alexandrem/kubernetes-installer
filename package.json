@@ -1,0 +1,7 @@
+{
+    "name": "kubernetes-installer",
+    "version": "0.1.0",
+    "repository": "https://github.com/alexandrem/kubernetes-installer.git",
+    "author": "Alexandre Mclean <alexandre.mclean@gmail.com>",
+    "license": "MIT"
+}

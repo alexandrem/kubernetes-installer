@@ -1,0 +1,34 @@
+
+cluster_name: ${cluster_name}
+
+${nodes}
+
+${kubernetes_version}
+
+cloud_provider:
+  name: ${cloud_provider}
+  ${openstack_cloud_config}
+
+services:
+  etcd:
+    ${service_etcd}
+  kube-api:
+    service_cluster_ip_range: "${cluster_service_cidr}"
+    extra_args:
+      ${api_extra_args}
+  kube-controller:
+    cluster_cidr: "${cluster_pod_cidr}"
+    service_cluster_ip_range: "${cluster_service_cidr}"
+    extra_args:
+      ${controller_extra_args}
+  kubelet:
+    cluster_dns_server: "${cluster_dns_server}"
+    extra_args:
+      ${kubelet_extra_args}
+
+ignore_docker_version: ${ignore_docker_version}
+
+network:
+  plugin: ${network_plugin}
+  options:
+    ${network_options}

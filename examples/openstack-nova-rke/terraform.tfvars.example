@@ -1,0 +1,31 @@
+cluster_name = "test"
+
+openstack_master_flavor_name = ""
+
+openstack_etcd_flavor_name = ""
+
+openstack_worker_flavor_name = ""
+
+openstack_floatingip_pool = "public"
+
+openstack_image_name = "centos-7"
+
+master_count = 1
+
+etcd_count = 1
+
+worker_count = 1
+
+ssh_user = "root"
+
+openstack_auth_url = "https://localhost:5000/v3"
+
+openstack_username = "user"
+
+openstack_password = "pass"
+
+openstack_region = "RegionOne"
+
+openstack_tenant_name = "project"
+
+openstack_domain_name = "Default"
