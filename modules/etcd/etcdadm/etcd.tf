@@ -12,11 +12,11 @@ EOF
 # etcdadm init is always done on the first etcd node for simplicity
 resource "null_resource" "etcd-init" {
   connection {
-      type        = "ssh"
-      host        = "${element(var.node_ssh_ips, 0)}"
-      user        = "${element(var.node_ssh_users, 0)}"
+    type        = "ssh"
+    host        = "${element(var.node_ssh_ips, 0)}"
+    user        = "${element(var.node_ssh_users, 0)}"
     private_key = "${file(lookup(data.external.ssh-keys.*.result[0], "key"))}"
-      port        = 22
+    port        = 22
   }
 
   provisioner "remote-exec" {
@@ -42,10 +42,10 @@ EOF
     ]
   }
 
-    # rsync or scp is required here because file provisioner cannot copy from remote
-    provisioner "local-exec" {
+  # rsync or scp is required here because file provisioner cannot copy from remote
+  provisioner "local-exec" {
     command = <<EOF
-    mkdir -p generated/etcd/pki
+mkdir -p generated/etcd/pki
 set -x
 for file in "ca.*" "apiserver-etcd-client.*"; do
   rsync -avz --rsync-path "sudo -u root rsync" \
@@ -59,21 +59,6 @@ EOF
   }
 }
 
-# # this is a trick to read content of dynamic files, we generate a json
-# # with filenames then read those external variables later
-data "external" "etcd-ca-files" {
-  program = ["echo",
-    "{",
-    "\"ca_crt\": \"${path.module}/generated/etcd/pki/ca.crt\",",
-    "\"ca_key\": \"${path.module}/generated/etcd/pki/ca.key\"",
-    "}",
-  ]
-
-  depends_on = [
-    "null_resource.etcd-init",
-  ]
-}
-
 resource "null_resource" "etcd-join" {
   count = "${var.count}"
 
@@ -82,11 +67,11 @@ resource "null_resource" "etcd-join" {
   }
 
   connection {
-      type        = "ssh"
-      host        = "${element(var.node_ssh_ips, count.index)}"
-      user        = "${element(var.node_ssh_users, length(var.node_ssh_users)>1? count.index : 0)}"
+    type        = "ssh"
+    host        = "${element(var.node_ssh_ips, count.index)}"
+    user        = "${element(var.node_ssh_users, length(var.node_ssh_users)>1? count.index : 0)}"
     private_key = "${file(lookup(data.external.ssh-keys.*.result[length(var.node_ssh_key_paths)>1? count.index : 0], "key"))}"
-      port        = 22
+    port        = 22
   }
 
   # this is merely a trick to wait that remote host has ssh open and ready to accept connection,
@@ -170,7 +155,7 @@ EOF
     ]
   }
 
-    depends_on = [
+  depends_on = [
     "null_resource.etcd-init",
   ]
 }
