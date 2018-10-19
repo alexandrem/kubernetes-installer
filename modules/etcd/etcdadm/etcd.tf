@@ -71,20 +71,6 @@ resource "null_resource" "etcd-join" {
       port        = 22
   }
 
-  # provisioner "remote-exec" {
-  #   inline = ["sudo mkdir -p /etc/etcd/pki"]
-  # }
-
-  # provisioner "file" {
-  #   content = "${file(lookup(data.external.etcd-ca-files.result, "ca_crt"))}"
-  #   destination = "/etc/etcd/pki/ca.crt"
-  # }
-
-  # provisioner "file" {
-  #   content = "${file(lookup(data.external.etcd-ca-files.result, "ca_key"))}"
-  #   destination = "/etc/etcd/pki/ca.key"
-  # }
-
   # this is merely a trick to wait that remote host has ssh open and ready to accept connection,
   # otherwise the next local-exec with rsync might fail.
   provisioner "remote-exec" {
