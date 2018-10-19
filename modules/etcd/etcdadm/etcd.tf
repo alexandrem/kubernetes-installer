@@ -46,7 +46,6 @@ EOF
   provisioner "local-exec" {
     command = <<EOF
 mkdir -p generated/etcd/pki
-set -x
 for file in "ca.*" "apiserver-etcd-client.*"; do
   rsync -avz --rsync-path "sudo -u root rsync" \
     -e "ssh ${element(var.node_ssh_ips, 0)} \
