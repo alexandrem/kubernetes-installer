@@ -1,15 +1,25 @@
+# this is a trick to read content of dynamic files, we generate a json
+# with filenames then read those external variables later
+data "external" "ssh-keys" {
+  count = "${length(var.node_ssh_key_paths)}"
+
+  program = ["echo", <<EOF
+{"key": "${element(var.node_ssh_key_paths, count.index)}"}
+EOF
+  ]
+}
+
 # etcdadm init is always done on the first etcd node for simplicity
 resource "null_resource" "etcd-init" {
   connection {
       type        = "ssh"
       host        = "${element(var.node_ssh_ips, 0)}"
       user        = "${element(var.node_ssh_users, 0)}"
-      private_key = "${file(element(var.node_ssh_key_paths, 0))}"
+    private_key = "${file(lookup(data.external.ssh-keys.*.result[0], "key"))}"
       port        = 22
   }
 
   provisioner "remote-exec" {
-    
     inline = [<<EOF
     PATH=$PATH:/opt/bin
     #set -x
@@ -36,7 +46,15 @@ EOF
     provisioner "local-exec" {
     command = <<EOF
     mkdir -p generated/etcd/pki
-    rsync -avz --rsync-path "sudo -u root rsync" -e "ssh ${element(var.node_ssh_ips, 0)} -i ${element(var.node_ssh_key_paths, 0)} -l ${element(var.node_ssh_users, 0)} -o StrictHostKeyChecking=false" :/etc/etcd/pki/ca.* generated/etcd/pki/;
+set -x
+for file in "ca.*" "apiserver-etcd-client.*"; do
+  rsync -avz --rsync-path "sudo -u root rsync" \
+    -e "ssh ${element(var.node_ssh_ips, 0)} \
+    -i ${element(var.node_ssh_key_paths, 0)} \
+    -l ${element(var.node_ssh_users, 0)} \
+    -o StrictHostKeyChecking=false" \
+    :/etc/etcd/pki/$$file generated/etcd/pki/;
+done
 EOF
   }
 }
@@ -67,7 +85,7 @@ resource "null_resource" "etcd-join" {
       type        = "ssh"
       host        = "${element(var.node_ssh_ips, count.index)}"
       user        = "${element(var.node_ssh_users, length(var.node_ssh_users)>1? count.index : 0)}"
-      private_key = "${file(element(var.node_ssh_key_paths, length(var.node_ssh_key_paths)>1? count.index : 0))}"
+    private_key = "${file(lookup(data.external.ssh-keys.*.result[length(var.node_ssh_key_paths)>1? count.index : 0], "key"))}"
       port        = 22
   }
 
@@ -89,7 +107,6 @@ EOF
   }
 
   provisioner "remote-exec" {
-    
     inline = [<<EOF
     PATH=$PATH:/opt/bin
     # set -x
