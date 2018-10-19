@@ -146,6 +146,13 @@ EOF
         fi
       done
 
+      # Introducing delay to prevent race conditions during fresh provisioning
+      # with many members.
+      # We probably could improve this somehow.
+      DELAY=$[ ( $RANDOM % 10 )  + 1 + (10*${count.index}) ]s
+      echo "Delaying join by $DELAY..."
+      sleep $DELAY
+
       for peer in $${others[@]}; do
         echo "Attempting to join peer $$peer..."
         sudo etcdadm join https://$$peer:2379 && break
