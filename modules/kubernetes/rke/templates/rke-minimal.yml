@@ -1,4 +1,4 @@
-# Generated automatically (forced at ${generation_time})
+# Generated automatically
 cluster_name: ${cluster_name}
 
 ${nodes}

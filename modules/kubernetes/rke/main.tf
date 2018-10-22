@@ -31,12 +31,9 @@ data template_file "rke" {
     kubelet_extra_args     = "${indent(6, lookup(data.external.kubelet_extra_args.result, "yaml"))}"
     network_plugin         = "${var.network_plugin}"
     network_options        = "${indent(4, lookup(data.external.network_options.result, "yaml"))}"
-
-    generation_time = "${var.force_provision? timestamp() : ""}"
   }
 }
 
-# could do some pre-provisioning stuffs on coreos images here
 resource "null_resource" "pre_provision" {
   count = "${var.master_count + var.etcd_count + var.worker_count}"
 
