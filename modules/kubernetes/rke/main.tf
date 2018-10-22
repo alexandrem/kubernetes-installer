@@ -69,7 +69,8 @@ EOF
     ]
   }
 
-  # copy existing cert files to all nodes, if any
+  # Copy existing cert files (if any) to all nodes.
+  # NOTE: We should probably only do this to remote control plane + etcd hosts. 
   provisioner "local-exec" {
     command = <<EOF
   # set -x
@@ -84,6 +85,16 @@ EOF
       generated/rke/pki/* :$$path/;
   done
     EOF
+  }
+
+  provisioner "remote-exec" {
+    inline = [<<EOF
+# Fix last rsync permissions
+for path in "/etc/kubernetes/ssl" "/etc/kubernetes/.tmp" "/opt/rke/etc/kubernetes/ssl" "/opt/rke/etc/kubernetes/.tmp"; do
+  sudo chown -R root:root $$path
+done
+EOF
+    ]
   }
 }
 
@@ -101,7 +112,10 @@ resource "local_file" "rke" {
     user        = "${lookup(local.rke_node_objects[0], "user")}"
   }
 
-  # obtain current RKE certs in the kubernetes datastore
+  # Obtain current RKE certs in the kubernetes datastore.
+  # We prefer this approach since the remote path may change depending on the
+  # host OS distro (e.g either /etc/kubernetes or /opt/rke/etc/kubernetes).
+  # This also ensures that the remote Kubernetes api is healthy at that point.
   provisioner "local-exec" {
     command = <<EOF
 mkdir -p generated/rke/pki
@@ -118,6 +132,11 @@ kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-syste
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-etcd-client -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-etcd-client.pem
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-etcd-client -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-etcd-client-key.pem
 
+# kube-admin
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-admin -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-admin.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-admin -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-admin-key.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-admin -o go-template='{{.data.Config}}' | $$decode > generated/rke/pki/kubecfg-kube-admin.yaml
+
 # api
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-apiserver.pem
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-apiserver-key.pem
@@ -125,22 +144,32 @@ kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-syste
 # api proxy
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver-proxy-client -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-apiserver-proxy-client.pem
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver-proxy-client -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-apiserver-proxy-client-key.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver-proxy-client -o go-template='{{.data.Config}}' | $$decode > generated/rke/pki/kubecfg-kube-apiserver-proxy-client.yaml
 
 # api requestheader
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver-requestheader-ca -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-apiserver-requestheader-ca.pem
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver-requestheader-ca -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-apiserver-requestheader-ca-key.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-apiserver-requestheader-ca -o go-template='{{.data.Config}}' | $$decode > generated/rke/pki/kubecfg-kube-apiserver-requestheader-ca.yaml
+
+# controller-manager
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-controller-manager -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-controller-manager.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-controller-manager -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-controller-manager-key.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-controller-manager -o go-template='{{.data.Config}}' | $$decode > generated/rke/pki/kubecfg-kube-controller-manager.yaml
 
 # node
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-node -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-node.pem
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-node -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-node-key.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-node -o go-template='{{.data.Config}}' | $$decode > generated/rke/pki/kubecfg-kube-node.yaml
 
 # proxy
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-proxy -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-proxy.pem
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-proxy -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-proxy-key.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-proxy -o go-template='{{.data.Config}}' | $$decode > generated/rke/pki/kubecfg-kube-proxy.yaml
 
 # scheduler
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-scheduler -o go-template='{{.data.Certificate}}' | $$decode > generated/rke/pki/kube-scheduler.pem
 kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-scheduler -o go-template='{{.data.Key}}' | $$decode > generated/rke/pki/kube-scheduler-key.pem
+kubectl --kubeconfig=generated/kube_config_cluster.yml get secrets -n kube-system kube-scheduler -o go-template='{{.data.Config}}' | $$decode > generated/rke/pki/kubecfg-kube-scheduler.yaml
 EOF
   }
 
