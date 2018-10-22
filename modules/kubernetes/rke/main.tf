@@ -58,8 +58,8 @@ resource "null_resource" "pre_provision" {
 # RKE generates the ssl certs in different places...
 sudo rm -fr /etc/kubernetes/.tmp
 sudo rm -fr /opt/rke/etc/kubernetes/.tmp
-sudo mkdir -p /etc/kubernetes/ssl
-sudo mkdir -p /opt/rke/etc/kubernetes/ssl
+sudo mkdir -p /etc/kubernetes/ssl /etc/kubernetes/.tmp
+sudo mkdir -p /opt/rke/etc/kubernetes/ssl /opt/rke/etc/kubernetes/.tmp
 
 # the "or true" is necessary for coreos where the curl script will return non zero
 # because docker already exists.
