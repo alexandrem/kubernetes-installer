@@ -13,6 +13,21 @@ variable "worker_node_objects" {
   default = []
 }
 
+variable "master_count" {
+  type    = "string"
+  default = 0
+}
+
+variable "etcd_count" {
+  type    = "string"
+  default = 0
+}
+
+variable "worker_count" {
+  type    = "string"
+  default = 0
+}
+
 variable "refresh_trigger" {
   type        = "map"
   description = "Map of valuesfor etcd join resource triggers. Same format as null_resource triggers."
@@ -147,4 +162,14 @@ variable "http_proxy" {
 variable "https_proxy" {
   type    = "string"
   default = ""
+}
+
+variable "depends_on" {
+  type    = "string"
+  default = ""
+}
+
+variable "force_provision" {
+  type    = "string"
+  default = false
 }
