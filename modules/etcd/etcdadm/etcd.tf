@@ -29,7 +29,7 @@ resource "null_resource" "etcd-init" {
       sudo mkdir -p /opt/bin &&
       sudo docker cp $$pid:/usr/bin/etcdadm /opt/bin/
     }
-    etcdadm info || {
+    sudo etcdadm info || {
       export HTTP_PROXY=${var.http_proxy}
       export HTTPS_PROXY=${var.https_proxy}
       sudo -E etcdadm download
