@@ -1,6 +1,6 @@
 data template_file "ext_etcd" {
   template = <<EOF
-path: /
+path: /registry
 external_urls:
   - ${indent(2, join("\n- ", split(",", var.external_etcd_urls)))}
 ca_cert: |-
