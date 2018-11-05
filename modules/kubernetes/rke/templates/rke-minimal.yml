@@ -32,3 +32,9 @@ network:
   plugin: ${network_plugin}
   options:
     ${network_options}
+
+ingress:
+  provider: ${ingress_provider}
+
+addons_include:
+  ${addons_include}

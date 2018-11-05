@@ -154,6 +154,16 @@ variable "network_options" {
   default = {}
 }
 
+variable "ingress_provider" {
+  type    = "string"
+  default = "nginx"
+}
+
+variable "addons_include" {
+  type    = "list"
+  default = []
+}
+
 variable "http_proxy" {
   type    = "string"
   default = ""

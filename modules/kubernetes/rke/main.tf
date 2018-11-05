@@ -31,6 +31,8 @@ data template_file "rke" {
     kubelet_extra_args     = "${indent(6, lookup(data.external.kubelet_extra_args.result, "yaml"))}"
     network_plugin         = "${var.network_plugin}"
     network_options        = "${indent(4, lookup(data.external.network_options.result, "yaml"))}"
+    ingress_provider       = "${var.ingress_provider}"
+    addons_include         = "${length(var.addons_include)>0? format("- %s", indent(2, join("\n- ", var.addons_include))) : ""}"
   }
 }
 
