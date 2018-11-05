@@ -66,6 +66,20 @@ EOF
     ]
   }
 
+  # ensure to have up-to-date local etcd cert files
+  provisioner "local-exec" {
+    command = <<EOF
+    ETCD_CA="${var.etcd_ca}"
+    [[ ! -z $ETCD_CA ]] && echo "$$ETCD_CA" > generated/rke/pki/kube-etcd-client-ca.pem
+
+    ETCD_KEY="${var.etcd_key}"
+    [[ ! -z $ETCD_KEY ]] && echo "$$ETCD_KEY" > generated/rke/pki/kube-etcd-client-key.pem
+
+    ETCD_CERT="${var.etcd_cert}"
+    [[ ! -z $ETCD_CERT ]] && echo "$$ETCD_CERT" > generated/rke/pki/kube-etcd-client.pem
+EOF
+  }
+
   # Copy existing cert files (if any) to all nodes.
   # NOTE: We should probably only do this to remote control plane + etcd hosts. 
   provisioner "local-exec" {
